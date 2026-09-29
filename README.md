@@ -57,7 +57,7 @@ account and API key.
    (`chrome.storage.local`) and is only ever sent to `app.simplelogin.io`
    over HTTPS.
 
-If no key is saved, or the API call fails (e.g. rate limit, invalid key,
+If no key is saved, or the API call fails (e.g. invalid key, no reusable alias,
 no network), the email field is simply left untouched — no fake address
 is ever generated instead.
 
@@ -84,6 +84,10 @@ is ever generated instead.
 - The email alias feature requires a SimpleLogin account and API key
   (see [Email alias setup](#email-alias-setup-simplelogin)); without one,
   the email field is left blank rather than filled with a fake address.
-- Each click on "Fill the form" creates a **new** SimpleLogin alias — old
-  ones aren't reused or cleaned up automatically. Manage/delete unused
-  aliases from your SimpleLogin dashboard if you don't want them to pile up.
+- Aliases are **reused**, not created on every click. The extension creates
+  up to 3 aliases (`MAX_POOL_SIZE` in `popup.js`), remembers them, and from
+  then on picks one of them at random. If SimpleLogin refuses to create a new
+  one (e.g. the 10-alias limit of the free plan), it falls back to the aliases
+  it created earlier — recognized by the note "Created by Fake Form Filler…" —
+  so your other aliases are never touched. Aliases you delete from the
+  SimpleLogin dashboard (or disable) are skipped automatically.
