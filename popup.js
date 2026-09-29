@@ -40,7 +40,14 @@ async function createSimpleLoginAlias(apiKey) {
     throw new Error("Invalid or expired API key");
   }
   if (!res.ok) {
-    throw new Error(`SimpleLogin API error (${res.status})`);
+    // SimpleLogin returns { "error": "..." } with a human-readable reason
+    // (e.g. alias quota reached). Surface it instead of just the status code.
+    let detail = "";
+    try {
+      const body = await res.json();
+      detail = body.error || body.message || "";
+    } catch (_) {}
+    throw new Error(`SimpleLogin API error (${res.status})${detail ? ": " + detail : ""}`);
   }
 
   const data = await res.json();
@@ -63,14 +70,20 @@ btn.addEventListener("click", async () => {
 
     // 1. Try to get a real, receivable email alias from SimpleLogin
     let emailAlias = null;
+    let emailErrorMessage = null;
     const { simpleLoginApiKey } = await chrome.storage.local.get("simpleLoginApiKey");
 
-    if (simpleLoginApiKey) {
+    if (!simpleLoginApiKey) {
+      emailErrorMessage = "no SimpleLogin API key saved";
+    } else {
       try {
         emailAlias = await createSimpleLoginAlias(simpleLoginApiKey);
+        if (!emailAlias) {
+          emailErrorMessage = "SimpleLogin API returned no alias";
+        }
       } catch (apiErr) {
         console.warn("SimpleLogin alias creation failed:", apiErr.message);
-        status.textContent = `Alias API failed (${apiErr.message}) — filling without email`;
+        emailErrorMessage = apiErr.message;
       }
     }
 
@@ -91,9 +104,13 @@ btn.addEventListener("click", async () => {
     const total = results.reduce((sum, r) => sum + (typeof r.result === "number" ? r.result : 0), 0);
 
     if (total > 0) {
-      status.textContent = emailAlias
-        ? `${total} fields filled in (email: ${emailAlias})`
-        : `${total} fields filled in`;
+      if (emailAlias) {
+        status.textContent = `${total} fields filled in (email: ${emailAlias})`;
+      } else if (emailErrorMessage) {
+        status.textContent = `${total} fields filled in — email skipped (${emailErrorMessage})`;
+      } else {
+        status.textContent = `${total} fields filled in`;
+      }
     } else {
       status.textContent = "No compatible fields found on this page";
     }
