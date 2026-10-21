@@ -1,4 +1,8 @@
 # Fake Form Filler
+![License](https://img.shields.io/badge/license-MIT-blue)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black&labelColor=F7DF1E)
+
+![Fake Form Filler](https://github.com/RykerWilder/static_files/blob/main/Form_filler.gif)
 
 A Chrome/Chromium extension (also works on Edge, Brave, etc.) that fills out
 web forms with fake but realistic-looking personal details — useful for
